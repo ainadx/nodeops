@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block heading %}Alerts{% endblock %}
+{% block actions %}
+  <form class="row" hx-get="/alerts" hx-target="body" hx-push-url="true">
+    <select class="select" name="state" style="width:auto" onchange="this.form.requestSubmit()">
+      {% for s in ['active','open','acknowledged','snoozed','resolved'] %}
+        <option value="{{ s }}" {{ 'selected' if state==s else '' }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </form>
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card__head"><div class="card__title">{{ state|title }} alerts</div>
+      <span class="badge">{{ alerts|length }}</span></div>
+    <table class="table">
+      <thead><tr><th>Node</th><th>Condition</th><th>Severity</th><th>State</th><th>Actions</th></tr></thead>
+      <tbody id="alert-rows">
+        {% for a in alerts %}{% include "partials/alert_row.html" %}{% else %}
+          <tr><td colspan="5"><div class="empty"><div class="empty__icon">🔕</div>Nothing here</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

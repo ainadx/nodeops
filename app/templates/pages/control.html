@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block heading %}Signal control — {{ n.name }}{% endblock %}
+{% block actions %}
+  <a class="btn" href="/nodes/{{ n.id }}">Back to node</a>
+{% endblock %}
+{% block content %}
+  {% if not fresh %}
+    <div class="card danger-zone mb-2">
+      <div class="card__body"><strong>Control disabled.</strong>
+        <span class="muted">This node is offline. Safety-critical signal changes require a live link and are refused — the node holds its last-known-good plan (or fails to all-red) on its own.</span></div>
+    </div>
+  {% endif %}
+
+  <div class="cols cols--2" style="grid-template-columns: 1fr 360px; align-items:start;">
+    <div class="card">
+      <div class="card__head"><div class="card__title">Plan versions</div>
+        <span class="badge">{{ plans|length }} versions</span></div>
+      <table class="table">
+        <thead><tr><th>Plan</th><th>R/A/G</th><th>State</th><th></th></tr></thead>
+        <tbody id="plan-versions">
+          {% include "partials/plan_versions.html" %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="gap:18px">
+      <div class="card">
+        <div class="card__head"><div class="card__title">New plan version</div></div>
+        <div class="card__body">
+          <p class="faint" style="font-size:12px">Editing creates a new version; prior versions are retained for rollback. Applying is confirmed and audit-logged.</p>
+          <form hx-post="/nodes/{{ n.id }}/plan" hx-target="#plan-versions" hx-swap="innerHTML">
+            <div class="field"><label>Name</label><input class="input" name="name" value="Tuned plan" required></div>
+            <div class="row" style="gap:10px">
+              <div class="field" style="flex:1"><label>Red (s)</label><input class="input" type="number" name="red_s" value="{{ plan_active.red_s if plan_active else 30 }}" min="1" required></div>
+              <div class="field" style="flex:1"><label>Amber</label><input class="input" type="number" name="amber_s" value="{{ plan_active.amber_s if plan_active else 4 }}" min="1" required></div>
+              <div class="field" style="flex:1"><label>Green</label><input class="input" type="number" name="green_s" value="{{ plan_active.green_s if plan_active else 25 }}" min="1" required></div>
+            </div>
+            <div class="field"><label>Schedule binding</label>
+              <select class="select" name="schedule">
+                <option>All day</option><option>Mon-Fri 07:00-09:30 (rush)</option>
+                <option>Mon-Fri 16:00-18:30 (rush)</option><option>22:00-05:00 (night)</option>
+              </select></div>
+            <div class="field"><label>Adaptive rule</label>
+              <select class="select" name="adaptive_rules">
+                <option>Extend amber +2s when rain detected</option>
+                <option>Flash red below 5 lux</option>
+                <option>None</option>
+              </select></div>
+            <div class="row" style="gap:8px">
+              <button class="btn" type="submit" name="apply_now" value="stage">Stage</button>
+              <button class="btn btn--primary" type="submit" name="apply_now" value="apply" {{ 'disabled' if not fresh else '' }}
+                      hx-confirm="Apply this plan to the live signal now?">Apply now</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card danger-zone">
+        <div class="card__head"><div class="card__title">Manual override</div></div>
+        <div class="card__body">
+          <p class="faint" style="font-size:12px">Forces a phase for a bounded time, then auto-restores the scheduled plan. Confirmed + logged.</p>
+          {% if override_left %}
+            <div class="mb-2"><span class="badge badge--danger">Override active · {{ (override_left // 60) }}m {{ (override_left % 60) }}s left</span></div>
+            <button class="btn btn--sm" hx-post="/nodes/{{ n.id }}/override/clear" hx-target="#statusbadge" hx-swap="innerHTML">Clear override now</button>
+          {% endif %}
+          <form hx-post="/nodes/{{ n.id }}/override" hx-target="#statusbadge" hx-swap="innerHTML" class="mt-2">
+            <div class="row" style="gap:10px">
+              <div class="field" style="flex:1"><label>Phase</label>
+                <select class="select" name="phase">
+                  <option value="all_red">All red (safe)</option>
+                  <option value="flashing_red">Flashing red</option>
+                  <option value="flashing_amber">Flashing amber</option>
+                  <option value="green">Force green</option>
+                </select></div>
+              <div class="field" style="width:110px"><label>Minutes</label><input class="input" type="number" name="minutes" value="5" min="1" max="30"></div>
+            </div>
+            <button class="btn btn--danger" style="width:100%" {{ 'disabled' if not fresh else '' }}
+                    hx-confirm="Force this phase on the live signal? It auto-expires.">Engage override</button>
+          </form>
+          <div id="statusbadge" class="mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

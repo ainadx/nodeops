@@ -1,0 +1,47 @@
+{% import "partials/macros.html" as ui %}
+{% if not v.snap.fresh %}
+  <div class="card mt-3 danger-zone">
+    <div class="card__body row between">
+      <div><strong>Node is offline.</strong> <span class="muted">Showing last-known values from {{ (v.age_s // 60) }} minutes ago — not live. Remote control is disabled until the link returns.</span></div>
+      <span class="badge badge--danger">stale data</span>
+    </div>
+  </div>
+{% endif %}
+<div class="grid grid--stats mt-3">
+  {% set batt_mode = 'bad' if v.snap.battery_soc < 20 else ('warn' if v.snap.battery_soc < 40 else 'ok') %}
+  <div class="card metric">
+    <div class="k">Battery</div>
+    <div class="v">{{ v.snap.battery_soc }}% <span class="faint" style="font-size:13px">· {{ v.snap.battery_v }}V</span></div>
+    <div class="sub">~{{ v.snap.runtime_hrs }}h runtime left</div>
+    {{ ui.gauge(v.snap.battery_soc, batt_mode) }}
+  </div>
+  <div class="card metric">
+    <div class="k">Solar input</div>
+    <div class="v">{{ v.snap.solar_w }} W</div>
+    <div class="sub">{{ v.snap.solar_v }}V · {{ v.snap.solar_a }}A · {{ v.snap.harvest_wh }}Wh today</div>
+    {{ ui.gauge((v.snap.solar_w / 52 * 100)|round|int, 'ok') }}
+  </div>
+  <div class="card metric">
+    <div class="k">Cellular</div>
+    <div class="v">{{ v.snap.cell_bars }}/4 <span class="faint" style="font-size:13px">· {{ v.snap.cell_rssi }} dBm</span></div>
+    <div class="sub">{{ v.snap.carrier }} · {{ v.snap.data_mb }} MB this cycle</div>
+    {{ ui.gauge((v.snap.cell_bars / 4 * 100)|int, 'ok' if v.snap.cell_bars >= 2 else 'warn') }}
+  </div>
+  <div class="card metric">
+    <div class="k">RTC / time sync</div>
+    <div class="v">{{ 'Synced' if v.snap.rtc_synced else 'Drift' }}</div>
+    <div class="sub">{{ 'DS3231 locked to NTP' if v.snap.rtc_synced else 'Schedules may misfire' }}</div>
+    {{ ui.gauge(100 if v.snap.rtc_synced else 30, 'ok' if v.snap.rtc_synced else 'bad') }}
+  </div>
+</div>
+
+<div class="grid grid--stats mt-2">
+  <div class="card metric"><div class="k">Temperature</div><div class="v">{{ v.snap.temp_c }} °C</div>
+    <div class="sub">enclosure {{ v.snap.enclosure_c }} °C{{ ' · HIGH' if v.snap.enclosure_c >= 50 else '' }}</div></div>
+  <div class="card metric"><div class="k">Humidity</div><div class="v">{{ v.snap.humidity }}%</div>
+    <div class="sub">{{ v.snap.pressure }} hPa</div></div>
+  <div class="card metric"><div class="k">Ambient light</div><div class="v">{{ '{:,}'.format(v.snap.lux) }} lux</div>
+    <div class="sub">{{ 'low — flashing threshold' if v.snap.lux < 5 else 'daylight' }}</div></div>
+  <div class="card metric"><div class="k">Rain</div><div class="v">{{ 'Detected' if v.snap.rain else 'Dry' }}</div>
+    <div class="sub">{{ 'adaptive amber +2s active' if v.snap.rain else 'YL-38 clear' }}</div></div>
+</div>

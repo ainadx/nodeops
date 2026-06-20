@@ -1,0 +1,29 @@
+{# Reusable NodeOps widgets — imported by pages: {% import "partials/macros.html" as ui %} #}
+
+{% macro phasepill(phase, meta) %}
+  {% set m = meta.get(phase, ('-', '#667085', phase)) %}
+  <span class="phasepill" style="background:{{ m[1] }}1a;color:{{ m[1] }}">
+    <span class="glyph" style="background:{{ m[1] }}">{{ m[0] }}</span>{{ m[2] }}
+  </span>
+{% endmacro %}
+
+{% macro signalhead(phase, row=False) %}
+  {% set flashing = 'flash' if 'flashing' in phase else '' %}
+  <div class="signal {{ 'signal--row' if row else '' }}">
+    <span class="lamp lamp--red {{ flashing }}"   data-on="{{ 1 if phase in ['red','flashing_red','all_red'] else 0 }}"></span>
+    <span class="lamp lamp--amber {{ flashing }}" data-on="{{ 1 if phase in ['amber','flashing_amber'] else 0 }}"></span>
+    <span class="lamp lamp--green"                data-on="{{ 1 if phase == 'green' else 0 }}"></span>
+  </div>
+{% endmacro %}
+
+{% macro gauge(pct, mode='') %}
+  <div class="gauge {{ mode }}"><span style="width:{{ pct }}%"></span></div>
+{% endmacro %}
+
+{% macro freshness(view) %}
+  {% if view.snap.fresh %}
+    <span class="badge badge--success">live · {{ view.age_s }}s ago</span>
+  {% else %}
+    <span class="badge badge--danger">stale · last seen {{ (view.age_s // 60) }}m ago</span>
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,19 @@
+{% for p in plans %}
+  <tr>
+    <td><strong>{{ p.name }}</strong> <span class="faint mono" style="font-size:11.5px">v{{ p.version }}</span>
+      <div class="faint" style="font-size:11.5px">{{ p.schedule }}</div></td>
+    <td class="mono">{{ p.red_s }}/{{ p.amber_s }}/{{ p.green_s }}</td>
+    <td>
+      {% if p.active %}<span class="badge badge--success">active</span>
+      {% elif p.staged %}<span class="badge badge--warning">staged</span>
+      {% else %}<span class="badge">version</span>{% endif %}
+    </td>
+    <td style="text-align:right">
+      {% if not p.active %}
+        <button class="btn btn--ghost btn--sm" hx-post="/nodes/{{ p.node_id }}/plan/{{ p.id }}/apply"
+                hx-target="#plan-versions" hx-swap="innerHTML"
+                hx-confirm="Apply '{{ p.name }}' v{{ p.version }} to the live signal?">Apply</button>
+      {% endif %}
+    </td>
+  </tr>
+{% endfor %}

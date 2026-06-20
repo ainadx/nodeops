@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as ui %}
+{% block heading %}Fleet overview{% endblock %}
+{% block actions %}
+  <a class="btn" href="/map">Open map</a>
+  <a class="btn btn--primary" href="/fleet">Manage fleet</a>
+{% endblock %}
+{% block content %}
+  <div class="grid grid--stats">
+    <div class="card stat"><div class="stat__label">Nodes online</div>
+      <div class="stat__value">{{ kpis.online }}/{{ kpis.total }}</div>
+      <div class="stat__delta up">{{ kpis.uptime }}% uptime</div></div>
+    <div class="card stat"><div class="stat__label">On battery (no solar)</div>
+      <div class="stat__value">{{ kpis.on_batt }}</div>
+      <div class="stat__delta {{ 'down' if kpis.on_batt else 'up' }}">runtime-limited</div></div>
+    <div class="card stat"><div class="stat__label">Open alerts</div>
+      <div class="stat__value">{{ kpis.open_alerts }}</div>
+      <div class="stat__delta {{ 'down' if kpis.open_alerts else 'up' }}">needs triage</div></div>
+    <div class="card stat"><div class="stat__label">Offline</div>
+      <div class="stat__value">{{ kpis.offline }}</div>
+      <div class="stat__delta {{ 'down' if kpis.offline else 'up' }}">last-seen breach</div></div>
+  </div>
+
+  <div class="cols cols--2 mt-3">
+    <div class="card">
+      <div class="card__head">
+        <div class="card__title">Needs attention</div>
+        <span class="badge">{{ at_risk|length }} nodes</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>Node</th><th>Signal</th><th>Battery</th><th>Health</th></tr></thead>
+        <tbody>
+          {% for v in at_risk %}
+          <tr onclick="location.href='/nodes/{{ v.node.id }}'" style="cursor:pointer">
+            <td><strong>{{ v.node.name }}</strong><div class="faint" style="font-size:12px">{{ v.node.intersection }}</div></td>
+            <td>{{ ui.phasepill(v.snap.signal_phase, phase_meta) }}</td>
+            <td>{% if v.snap.fresh %}{{ v.snap.battery_soc }}%{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td><span class="badge {{ v.verdict_badge }}">{{ v.verdict_label }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4"><div class="empty"><div class="empty__icon">✅</div>All nodes healthy</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card__head">
+        <div class="card__title">Recent alerts</div>
+        <a class="btn btn--ghost btn--sm" href="/alerts">All alerts</a>
+      </div>
+      <div class="card__body list-rows">
+        {% for a in alerts %}
+          <div class="row between">
+            <div>
+              <div style="font-weight:600">{{ node_name.get(a.node_id, 'Node ' ~ a.node_id) }}</div>
+              <div class="faint" style="font-size:12.5px">{{ a.message }}</div>
+            </div>
+            <span class="badge {{ 'badge--danger' if a.severity=='critical' else ('badge--warning' if a.severity=='warning' else '') }}">{{ a.severity }}</span>
+          </div>
+        {% else %}
+          <div class="empty"><div class="empty__icon">🔕</div>No open alerts</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

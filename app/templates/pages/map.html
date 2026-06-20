@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block heading %}Fleet map{% endblock %}
+{% block actions %}
+  <span class="badge badge--success">{{ kpis.online }} online</span>
+  <span class="badge badge--danger">{{ kpis.offline }} offline</span>
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card__head">
+      <div class="card__title">Riverside deployment</div>
+      <span class="faint" style="font-size:12px">Pins are color + shape coded · pulsing = critical</span>
+    </div>
+    <div class="card__body">
+      <div class="mapwrap">
+        {% for p in pins %}
+          <div class="pin {{ 'pulse' if p.verdict_key in ['critical','offline'] else '' }}"
+               style="left:{{ p.x }}%; top:{{ p.y }}%"
+               onclick="location.href='/nodes/{{ p.node.id }}'" title="{{ p.node.name }} — {{ p.verdict_label }}">
+            <div class="dot" style="background:{{ p.color }}"></div>
+            <div class="lbl">{{ p.node.name }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="row wrap mt-2" style="font-size:12.5px">
+        <span class="badge badge--success">All good</span>
+        <span class="badge badge--warning">Needs attention</span>
+        <span class="badge badge--danger">Critical / offline</span>
+        <span class="badge">Setup</span>
+        <span class="spacer"></span>
+        <span class="faint">Tap a pin to open the node, then "Directions" to dispatch a crew.</span>
+      </div>
+    </div>
+  </div>
+{% endblock %}

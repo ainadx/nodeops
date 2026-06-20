@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block heading %}Bring-up — {{ n.name }}{% endblock %}
+{% block actions %}<a class="btn" href="/nodes/{{ n.id }}">Back to node</a>{% endblock %}
+{% block content %}
+  <div class="steps">
+    <div class="step done"><div class="row"><span class="n">1</span><strong>Fabricate</strong></div>
+      <div class="faint" style="font-size:12px">Print housings, cut rails (from BOM).</div></div>
+    <div class="step done"><div class="row"><span class="n">2</span><strong>Wire</strong></div>
+      <div class="faint" style="font-size:12px">UART / I²C / GPIO / power rails.</div></div>
+    <div class="step {{ 'done' if results else '' }}"><div class="row"><span class="n">3</span><strong>Bring-up</strong></div>
+      <div class="faint" style="font-size:12px">Run the live tests below.</div></div>
+    <div class="step {{ 'done' if n.commissioned else '' }}"><div class="row"><span class="n">4</span><strong>Assemble</strong></div>
+      <div class="faint" style="font-size:12px">Close enclosure, mount, go live.</div></div>
+  </div>
+
+  <div class="cols cols--2" style="grid-template-columns: 1fr 360px; align-items:start;">
+    <div class="card">
+      <div class="card__head"><div class="card__title">BLE self-tests</div>
+        <span class="badge">{{ results|length }}/4 run</span></div>
+      <div class="card__body">
+        <p class="faint" style="font-size:12px">These run over the BLE GATT seam — works at the pole with no cellular. Confirm wiring before you close the box.</p>
+        {% for key, label in tests %}
+          <div class="row between" style="padding:10px 0; border-bottom:1px solid var(--border)">
+            <div>
+              <strong>{{ label }}</strong>
+              {% if results.get(key) %}
+                <span class="badge {{ 'badge--success' if results[key].pass else 'badge--danger' }}">{{ 'PASS' if results[key].pass else 'FAIL' }}</span>
+                <div class="faint" style="font-size:11.5px">{{ results[key].detail }}</div>
+              {% endif %}
+            </div>
+            <button class="btn btn--sm" hx-post="/nodes/{{ n.id }}/bringup/{{ key }}"
+                    hx-target="#test-out" hx-swap="innerHTML">Run</button>
+          </div>
+        {% endfor %}
+        <div id="test-out" class="mt-2"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><div class="card__title">Commissioning</div></div>
+      <div class="card__body">
+        <p class="faint" style="font-size:12px">A node can only go live once every required test passes. This is the gate that prevents deploying a half-tested unit.</p>
+        <button class="btn btn--primary" style="width:100%" hx-post="/nodes/{{ n.id }}/bringup/commission"
+                hx-target="#test-out" hx-swap="innerHTML">Run commissioning checklist</button>
+        <div class="mt-2">
+          {% if n.commissioned %}
+            <span class="badge badge--success">Commissioned — ready to go live</span>
+            <a class="btn btn--primary mt-2" style="width:100%" href="/nodes/{{ n.id }}">Finish & confirm check-in</a>
+          {% else %}
+            <span class="badge badge--warning">Not yet commissioned</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

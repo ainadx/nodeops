@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block heading %}Fleet{% endblock %}
+{% block actions %}
+  <span class="htmx-indicator"><span class="spinner"></span></span>
+{% endblock %}
+{% block content %}
+  <div class="cols cols--2" style="grid-template-columns: 1fr 340px; align-items:start;">
+    <div class="card">
+      <div class="card__head">
+        <div class="card__title">Nodes</div>
+        <form class="row" hx-get="/fleet" hx-target="#fleet-rows" hx-trigger="change, keyup delay:300ms from:#q" hx-include="this">
+          <input class="input" id="q" name="q" value="{{ q }}" placeholder="Search name / serial / intersection" style="width:200px">
+          <select class="select" name="status" style="width:auto">
+            {% for s in ['all','good','attention','critical','offline','setup'] %}
+              <option value="{{ s }}" {{ 'selected' if status==s else '' }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <select class="select" name="site" style="width:auto">
+            <option value="all" {{ 'selected' if site=='all' else '' }}>All sites</option>
+            {% for st in sites %}<option value="{{ st.id }}" {{ 'selected' if site==st.id|string else '' }}>{{ st.name }}</option>{% endfor %}
+          </select>
+        </form>
+      </div>
+      <table class="table">
+        <thead><tr><th>Node</th><th>Site</th><th>Signal</th><th>Battery</th><th>Health</th><th></th></tr></thead>
+        <tbody id="fleet-rows">{{ rows_html|safe }}</tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><div class="card__title">Provision a node</div></div>
+      <div class="card__body">
+        <p class="muted" style="font-size:12.5px">Scan the enclosure QR or enter the serial. The node starts in <span class="kbd">provisioning</span> until bring-up passes.</p>
+        <form hx-post="/nodes" hx-target="#prov-result" hx-swap="innerHTML" hx-on::after-request="this.reset()">
+          <div class="field"><label>Serial</label><input class="input" name="serial" placeholder="STN-XXXX" required></div>
+          <div class="field"><label>Name</label><input class="input" name="name" placeholder="e.g. Main & 9th" required></div>
+          <div class="field"><label>Intersection</label><input class="input" name="intersection" placeholder="Main St / 9th Ave"></div>
+          <div class="field"><label>Site</label><select class="select" name="site_id">
+            {% for st in sites %}<option value="{{ st.id }}">{{ st.name }}</option>{% endfor %}</select></div>
+          <button class="btn btn--primary" style="width:100%">Register node</button>
+        </form>
+        <table class="table" style="margin-top:10px"><tbody id="prov-result"></tbody></table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

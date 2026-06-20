@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block heading %}Firmware & OTA{% endblock %}
+{% block actions %}<span class="badge badge--accent">latest {{ latest.version }}</span>{% endblock %}
+{% block content %}
+  <div class="cols cols--2" style="grid-template-columns: 1fr 320px; align-items:start;">
+    <div class="card">
+      <div class="card__head"><div class="card__title">Fleet firmware</div></div>
+      <table class="table">
+        <thead><tr><th>Node</th><th>Version</th><th>Battery</th><th>OTA</th></tr></thead>
+        <tbody id="fw-rows">
+          {% for r in rows %}
+          <tr id="fw-{{ r.node.id }}">
+            <td><a href="/nodes/{{ r.node.id }}"><strong>{{ r.node.name }}</strong></a>
+              <div class="faint mono" style="font-size:11.5px">{{ r.node.serial }}</div></td>
+            <td><span class="badge {{ 'badge--warning' if r.behind else 'badge--success' }}">{{ r.node.firmware }}</span></td>
+            <td>{{ r.soc }}%</td>
+            <td style="text-align:right">
+              {% if r.node.status == 'offline' %}<span class="faint">offline</span>
+              {% elif r.behind %}
+                <button class="btn btn--primary btn--sm" hx-post="/firmware/{{ r.node.id }}/update"
+                        hx-target="#fw-{{ r.node.id }} td:nth-child(2)" hx-swap="innerHTML"
+                        hx-confirm="Push OTA {{ latest.version }} to {{ r.node.serial }}? (deferred if battery <50%)">Update</button>
+              {% else %}
+                <button class="btn btn--ghost btn--sm" hx-post="/firmware/{{ r.node.id }}/rollback"
+                        hx-target="#fw-{{ r.node.id }} td:nth-child(2)" hx-swap="innerHTML"
+                        hx-confirm="Roll back {{ r.node.serial }} to the previous firmware?">Roll back</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="gap:18px">
+      <div class="card">
+        <div class="card__head"><div class="card__title">Releases</div></div>
+        <div class="card__body list-rows">
+          {% for f in releases %}
+            <div><div class="row between"><strong>{{ f.version }}</strong>
+              {% if f.is_latest %}<span class="badge badge--success">latest</span>{% endif %}</div>
+              <div class="faint" style="font-size:12px">{{ f.notes }}</div></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__head"><div class="card__title">OTA jobs</div></div>
+        <div class="card__body list-rows">
+          {% for j in jobs %}
+            <div class="row between"><div>Node {{ j.node_id }} → {{ j.target_version }}
+              <div class="faint" style="font-size:11.5px">{{ j.reason }}</div></div>
+              <span class="badge {{ 'badge--warning' if j.state=='deferred' else ('badge--success' if j.state=='done' else '') }}">{{ j.state }}</span></div>
+          {% else %}<div class="empty">No OTA jobs yet</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="faint mt-2" style="font-size:12px">OTA is client-initiated, signed, resumable, <strong>power-aware</strong> (auto-deferred below 50% SoC), supports canary rollout and <strong>rollback</strong>. Offline nodes are skipped.</p>
+{% endblock %}

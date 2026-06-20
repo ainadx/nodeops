@@ -1,0 +1,14 @@
+<div class="card {{ '' if res.pass else 'danger-zone' }}">
+  <div class="card__body">
+    <div class="row between">
+      <strong>{{ res.title }}</strong>
+      <span class="badge {{ 'badge--success' if res.pass else 'badge--danger' }}">{{ 'PASS' if res.pass else 'FAIL' }}</span>
+    </div>
+    <div class="testresult">{% for line in res.lines %}{{ line }}
+{% endfor %}</div>
+    <div class="muted mt-2" style="font-size:12.5px">{{ res.detail }}</div>
+    {% if test == 'commission' and res.pass %}
+      <a class="btn btn--primary mt-2" href="/nodes/{{ n.id }}">Node commissioned — continue</a>
+    {% endif %}
+  </div>
+</div>

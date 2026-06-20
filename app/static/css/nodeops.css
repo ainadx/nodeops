@@ -1,0 +1,82 @@
+/* NodeOps supplemental styles — built on the golden design-system tokens.
+   Only domain-specific widgets live here (signal lamps, map, sparkline,
+   wizard, prototype banner). Everything else reuses app.css classes. */
+
+.protobanner {
+  background: linear-gradient(90deg, #6d28d9, #4f46e5);
+  color: #fff; font-size: 12.5px; padding: 7px 16px; text-align: center;
+}
+.protobanner a { color: #fff; text-decoration: underline; font-weight: 600; }
+.protobanner code { background: rgba(255,255,255,.16); padding: 0 5px; border-radius: 5px; }
+
+/* ── Signal head (R/A/G lamps) ─────────────────────────────────────────── */
+.signal { display: inline-flex; flex-direction: column; gap: 6px; padding: 8px;
+  background: #15181e; border-radius: 12px; width: max-content; }
+.signal--row { flex-direction: row; }
+.lamp { width: 22px; height: 22px; border-radius: 999px; background: #2a2f3a;
+  border: 1px solid rgba(255,255,255,.08); position: relative; }
+.lamp[data-on="1"].lamp--red    { background: #f04438; box-shadow: 0 0 10px 2px rgba(240,68,56,.7); }
+.lamp[data-on="1"].lamp--amber  { background: #f79009; box-shadow: 0 0 10px 2px rgba(247,144,9,.7); }
+.lamp[data-on="1"].lamp--green  { background: #12b76a; box-shadow: 0 0 10px 2px rgba(18,183,106,.7); }
+.lamp.flash[data-on="1"] { animation: lampflash 1s steps(1) infinite; }
+@keyframes lampflash { 50% { opacity: .25; box-shadow: none; } }
+
+/* Phase pill carries a LETTER so it never relies on color alone (a11y). */
+.phasepill { display: inline-flex; align-items: center; gap: 6px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; }
+.phasepill .glyph { width: 16px; height: 16px; border-radius: 999px; display: grid;
+  place-items: center; color: #fff; font-size: 10px; font-weight: 800; }
+
+/* ── Metric tiles ──────────────────────────────────────────────────────── */
+.metric { padding: 14px 16px; }
+.metric .k { font-size: 11.5px; color: var(--text-muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; }
+.metric .v { font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: -.01em; }
+.metric .sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+.gauge { height: 7px; border-radius: 999px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+.gauge > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.gauge.warn > span { background: var(--warning); }
+.gauge.bad  > span { background: var(--danger); }
+.gauge.ok   > span { background: var(--success); }
+
+/* ── Map ───────────────────────────────────────────────────────────────── */
+.mapwrap { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-lg);
+  overflow: hidden; border: 1px solid var(--border);
+  background:
+    linear-gradient(0deg, rgba(0,0,0,.03), rgba(0,0,0,.03)),
+    repeating-linear-gradient(0deg, transparent 0 39px, var(--border) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--border) 39px 40px),
+    var(--surface-2); }
+.pin { position: absolute; transform: translate(-50%, -50%); cursor: pointer; text-align: center; }
+.pin .dot { width: 16px; height: 16px; border-radius: 999px; border: 2.5px solid #fff;
+  box-shadow: var(--shadow); }
+.pin .lbl { font-size: 10.5px; font-weight: 600; margin-top: 2px; background: var(--surface);
+  padding: 0 4px; border-radius: 4px; border: 1px solid var(--border); white-space: nowrap; }
+.pin.pulse .dot { animation: pinpulse 1.6s ease-out infinite; }
+@keyframes pinpulse { 0% { box-shadow: 0 0 0 0 rgba(240,68,56,.5); } 100% { box-shadow: 0 0 0 12px rgba(240,68,56,0); } }
+
+/* ── Sparkline ─────────────────────────────────────────────────────────── */
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 38px; }
+.spark > i { flex: 1; background: var(--accent-soft); border-radius: 2px 2px 0 0; min-height: 2px; }
+.spark > i.hi { background: var(--accent); }
+
+/* ── Wizard / bring-up ─────────────────────────────────────────────────── */
+.steps { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.step { flex: 1; min-width: 150px; padding: 12px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface); }
+.step .n { width: 22px; height: 22px; border-radius: 999px; background: var(--surface-2);
+  display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+.step.done { border-color: var(--success); }
+.step.done .n { background: var(--success-soft); color: var(--success); }
+.testresult { font-family: var(--font-mono); font-size: 12.5px; background: var(--surface-2);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 8px; white-space: pre-wrap; }
+.kbd { font-family: var(--font-mono); font-size: 12px; background: var(--surface-2);
+  padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border); }
+
+/* small helpers */
+.stack { display: flex; flex-direction: column; gap: 4px; }
+.cols { display: grid; gap: 16px; }
+@media (min-width: 900px) { .cols--2 { grid-template-columns: 1.4fr 1fr; } .cols--3 { grid-template-columns: repeat(3,1fr); } }
+.danger-zone { border-left: 3px solid var(--danger); }
+.list-rows > div { padding: 11px 0; border-bottom: 1px solid var(--border); }
+.list-rows > div:last-child { border-bottom: 0; }

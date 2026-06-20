@@ -1,0 +1,18 @@
+{% import "partials/macros.html" as ui %}
+{% for v in views %}
+  <tr onclick="location.href='/nodes/{{ v.node.id }}'" style="cursor:pointer">
+    <td><strong>{{ v.node.name }}</strong>
+      <div class="faint mono" style="font-size:11.5px">{{ v.node.serial }} · {{ v.node.intersection }}</div></td>
+    <td class="muted">{{ v.site }}</td>
+    <td>{{ ui.phasepill(v.snap.signal_phase, phase_meta) }}</td>
+    <td>
+      {% if v.snap.fresh %}
+        {{ v.snap.battery_soc }}% <span class="faint" style="font-size:11.5px">· {{ v.snap.runtime_hrs }}h</span>
+      {% else %}<span class="muted">offline</span>{% endif %}
+    </td>
+    <td><span class="badge {{ v.verdict_badge }}">{{ v.verdict_label }}</span></td>
+    <td style="text-align:right"><a class="btn btn--ghost btn--sm" href="/nodes/{{ v.node.id }}">Open</a></td>
+  </tr>
+{% else %}
+  <tr><td colspan="6"><div class="empty"><div class="empty__icon">🔎</div>No nodes match</div></td></tr>
+{% endfor %}

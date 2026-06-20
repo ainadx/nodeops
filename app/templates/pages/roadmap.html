@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block heading %}Roadmap{% endblock %}
+{% block content %}
+  <div class="card" style="max-width:780px">
+    <div class="card__head">
+      <div class="card__title">NodeOps — what's built and what's coming</div>
+      <span class="badge badge--accent">V0</span>
+    </div>
+    <div class="card__body">
+      <p class="muted mb-2">This reference console ships the P0 operator surface against a mock cloud + device.
+      Phase 1 brings OTA/RBAC/maintenance depth; Phase 2 brings energy intelligence and corridor coordination.
+      See <span class="kbd">POST_LAUNCH_PHASE1.md</span> in the repo for the issue-ready backlog.</p>
+      <div class="grid" style="gap:0">
+        {% for r in roadmap %}
+          {% set meta = {
+            'done':    ('badge--success','✓ Shipped'),
+            'progress':('badge--warning','● In progress'),
+            'planned': ('badge','○ Planned')
+          }.get(r.state, ('badge','○ Planned')) %}
+          <div class="row between" style="padding:14px 0; border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-weight:600">{{ r.title }}</div>
+              <div class="faint" style="font-size:12.5px">{{ r.note }}</div>
+            </div>
+            <span class="badge {{ meta[0] }}">{{ meta[1] }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<tr id="alert-{{ a.id }}">
+  <td><a href="/nodes/{{ a.node_id }}"><strong>{{ node_name.get(a.node_id, 'Node ' ~ a.node_id) }}</strong></a></td>
+  <td>{{ a.message }}<div class="faint" style="font-size:11.5px">{{ a.kind|replace('_',' ') }}</div></td>
+  <td><span class="badge {{ 'badge--danger' if a.severity=='critical' else ('badge--warning' if a.severity=='warning' else '') }}">{{ a.severity }}</span></td>
+  <td><span class="badge {{ 'badge--success' if a.state=='resolved' else ('badge--accent' if a.state=='acknowledged' else '') }}">{{ a.state }}</span></td>
+  <td style="text-align:right">
+    {% if a.state in ['open','snoozed'] %}
+      <button class="btn btn--ghost btn--sm" hx-post="/alerts/{{ a.id }}/ack" hx-target="#alert-{{ a.id }}" hx-swap="outerHTML">Ack</button>
+    {% endif %}
+    {% if a.state == 'open' %}
+      <button class="btn btn--ghost btn--sm" hx-post="/alerts/{{ a.id }}/snooze" hx-target="#alert-{{ a.id }}" hx-swap="outerHTML">Snooze</button>
+    {% endif %}
+    {% if a.state != 'resolved' %}
+      <button class="btn btn--ghost btn--sm" hx-post="/alerts/{{ a.id }}/resolve" hx-target="#alert-{{ a.id }}" hx-swap="outerHTML"
+              hx-confirm="Mark this alert resolved?">Resolve</button>
+    {% endif %}
+  </td>
+</tr>

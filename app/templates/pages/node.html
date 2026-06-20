@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as ui %}
+{% block heading %}{{ v.node.name }}{% endblock %}
+{% block actions %}
+  <a class="btn" href="https://maps.google.com/?q={{ v.node.lat }},{{ v.node.lon }}" target="_blank" rel="noopener">Directions</a>
+  {% if v.node.status == 'provisioning' %}
+    <button class="btn btn--primary" hx-post="/nodes/{{ v.node.id }}/checkin" hx-target="#statusbadge" hx-swap="innerHTML"
+            hx-confirm="Confirm this node has checked in to the cloud?">Confirm check-in</button>
+  {% else %}
+    <a class="btn" href="/nodes/{{ v.node.id }}/bringup">Bring-up & tests</a>
+    <a class="btn btn--primary" href="/nodes/{{ v.node.id }}/control">Signal control</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card__body row between wrap">
+      <div class="row" style="gap:16px">
+        {{ ui.signalhead(v.snap.signal_phase) }}
+        <div class="stack">
+          <div class="row"><span id="statusbadge"><span class="badge {{ v.verdict_badge }}">{{ v.verdict_label }}</span></span>
+            {{ ui.phasepill(v.snap.signal_phase, phase_meta) }}</div>
+          <div class="faint mono" style="font-size:12px">{{ v.node.serial }} · {{ v.node.intersection }} · {{ site if site else '' }}</div>
+          <div>{{ ui.freshness(v) }} · firmware <span class="kbd">{{ v.node.firmware }}</span></div>
+        </div>
+      </div>
+      <div class="stack" style="text-align:right">
+        {% if override_active %}
+          <span class="badge badge--danger">MANUAL OVERRIDE · expires in {{ (override_left // 60) }}m {{ (override_left % 60) }}s</span>
+        {% endif %}
+        <button class="btn btn--sm {{ 'btn--danger' if v.node.status != 'maintenance' else '' }}"
+                hx-post="/nodes/{{ v.node.id }}/service" hx-target="#statusbadge" hx-swap="innerHTML"
+                hx-confirm="{{ 'Enter service mode? The signal goes to a safe state.' if v.node.status != 'maintenance' else 'Exit service mode and restore the signal?' }}">
+          {{ 'Enter service mode' if v.node.status != 'maintenance' else 'Exit service mode' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {# Live telemetry — polled every 4s against the mock device seam #}
+  <div id="telemetry" hx-get="/nodes/{{ v.node.id }}/telemetry" hx-trigger="every 4s" hx-swap="innerHTML">
+    {% include "partials/telemetry.html" %}
+  </div>
+
+  <div class="cols cols--2 mt-3">
+    <div class="card">
+      <div class="card__head"><div class="card__title">Active timing plan</div>
+        <a class="btn btn--ghost btn--sm" href="/nodes/{{ v.node.id }}/control">Edit</a></div>
+      <div class="card__body">
+        {% if plan %}
+          <div class="row wrap" style="gap:18px">
+            <div class="stack"><span class="faint" style="font-size:11.5px">RED</span><strong>{{ plan.red_s }}s</strong></div>
+            <div class="stack"><span class="faint" style="font-size:11.5px">AMBER</span><strong>{{ plan.amber_s }}s</strong></div>
+            <div class="stack"><span class="faint" style="font-size:11.5px">GREEN</span><strong>{{ plan.green_s }}s</strong></div>
+            <div class="stack"><span class="faint" style="font-size:11.5px">VERSION</span><strong>v{{ plan.version }}</strong></div>
+          </div>
+          <p class="muted mt-2" style="font-size:12.5px">{{ plan.name }} · {{ plan.schedule }}<br>
+          <span class="faint">Adaptive: {{ plan.adaptive_rules }}</span></p>
+        {% else %}<div class="empty">No active plan</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><div class="card__title">Events & alerts</div></div>
+      <div class="card__body list-rows">
+        {% for a in alerts %}
+          <div class="row between"><div><div style="font-weight:600">{{ a.kind|replace('_',' ')|title }}</div>
+            <div class="faint" style="font-size:12px">{{ a.message }}</div></div>
+            <span class="badge {{ 'badge--danger' if a.severity=='critical' else ('badge--warning' if a.severity=='warning' else '') }}">{{ a.state }}</span></div>
+        {% endfor %}
+        {% for e in events %}
+          <div class="row between"><div><div style="font-weight:600">{{ e.kind|title }}</div>
+            <div class="faint" style="font-size:12px">{{ e.detail }}</div></div>
+            <span class="faint" style="font-size:11.5px">{{ e.ts.strftime('%b %d') }}</span></div>
+        {% endfor %}
+        {% if not alerts and not events %}<div class="empty">No history yet</div>{% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
